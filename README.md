@@ -1,5 +1,4 @@
-Android Kit
-=========
+# Android Kit
 
 Android Kit is a collection of useful classes and methods to make some development tasks easier. This was originally my personal set of utilities which I've been using for a few years now, and I've decided to share it with everyone in hopes that it will also save people some development time.
 
@@ -7,8 +6,7 @@ You may also be interested in [Swift Kit](https://github.com/AldrinClemente/Swif
 
 ----------
 
-Features
-------------
+## Features
 
 #### HTTP Kit
 Makes HTTP requests simpler. Includes option to use your own trust store or key store, or completely bypass SSL client authentication if needed. Multi-part content body is also supported. All important details about the request and the response can also be automatically logged if desired.
@@ -65,12 +63,40 @@ A collection of utility methods related to `View`s, such as getting values from 
 
 ----------
 
-Notes
-------------
+## How to Use
+
+### Manual Import
+
+#### 1. Clone **Android Kit**
+```
+git clone https://github.com/AldrinClemente/Android-Kit.git
+```
+
+#### 2. Import the **Android Kit** *library* module into your project:
+> 1. In Android Studio, go to **File** > **New** > **Import Module...**
+> 2. Select the root directory of **Android Kit**
+> 3. Make sure **Import** is checked for `:library` and click **Finish**
+
+#### 3. Add the **Android Kit** *library* module to your app module dependencies
+> 1. In Android Studio, go to **File** > **Project Structure**
+> 2. Select your module and go to the **Dependencies** tab
+> 3. Click the **+** button then select **Module dependency**
+> 4. Select `:library` and click **OK** to add the dependency then **OK** again to close the **Project Structure** window
+
+#### 4. **Done**!
+
+### Gradle
+
+*Coming soon!*
+
+----------
+
+## Notes
+
 APIs/method names may still change a few times while we're still below 1.0. I'm still trying to decide on some class and method names and where to put them.
 
 ----------
 
-Bug Reports and Requests
-------------
+## Bug Reports and Requests
+
 Please submit bugs using the [issue tracker](https://github.com/AldrinClemente/Android-Kit/issues/new). Feature requests are very welcome too!
