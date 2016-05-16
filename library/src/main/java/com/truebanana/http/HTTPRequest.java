@@ -28,6 +28,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 
+import com.truebanana.async.Async;
 import com.truebanana.log.Log;
 
 import org.json.JSONObject;
@@ -108,7 +109,7 @@ import javax.net.ssl.X509TrustManager;
  */
 public class HTTPRequest {
     private HTTPResponseListener responseListener = defaultResponseListener;
-    private HTTPRequestMethod requestMethod;
+    private HTTPRequestMethod requestMethod = HTTPRequestMethod.GET;
     private String url;
     private String body;
     private MultiPartContent multiPartContent;
@@ -517,7 +518,20 @@ public class HTTPRequest {
      * Executes this {@link HTTPRequest} asynchronously. To hook to events or listen to the server response, you must provide an {@link HTTPResponseListener} using {@link HTTPRequest#setHTTPResponseListener(HTTPResponseListener)}.
      */
     public void executeAsync() {
-        new Thread(new Runnable() {
+        executeAsync(true);
+    }
+
+    /**
+     * Queues this {@link HTTPRequest} for serial asynchronous execution. Note that queue will not wait for {@link HTTPRequest}s executed using {@link HTTPRequest#executeAsync()} to finish, and such requests will never be considered as part of the queue at any time.
+     *
+     * To hook to events or listen to the server response, you must provide an {@link HTTPResponseListener} using {@link HTTPRequest#setHTTPResponseListener(HTTPResponseListener)}.
+     */
+    public void queue() {
+        executeAsync(false);
+    }
+
+    private void executeAsync(boolean executeInParallel) {
+        Async.executeAsync(new Runnable() {
             @Override
             public void run() {
                 HttpURLConnection urlConnection = buildURLConnection();
@@ -632,7 +646,7 @@ public class HTTPRequest {
                 // Terminate the connection
                 urlConnection.disconnect();
             }
-        }).start();
+        }, executeInParallel);
     }
 
     private static class NoVerifyTrustManager implements X509TrustManager {
