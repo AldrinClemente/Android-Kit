@@ -120,6 +120,8 @@ public class HTTPRequest {
     private Map<String, String> headers = new HashMap<>();
     private Map<String, String> queryParameters = new HashMap<>();
 
+    private HTTPRequestBodyProvider bodyProvider;
+
     private InputStream keyStore, trustStore;
     private String keyStorePassword, trustStorePassword;
 
@@ -217,6 +219,7 @@ public class HTTPRequest {
         r.addHeaders(headers);
         r.addQueryParameters(queryParameters);
         r.setRequestBody(body);
+        r.setRequestBodyProvider(bodyProvider);
         r.setTrustStore(trustStore, trustStorePassword);
         r.setKeyStore(keyStore, keyStorePassword);
         r.setHTTPResponseListener(responseListener);
@@ -397,6 +400,17 @@ public class HTTPRequest {
     }
 
     /**
+     * Sets a {@link HTTPRequestBodyProvider} for just-in-time building of the request body.
+     *
+     * @param provider The {@link HTTPRequestBodyProvider}
+     * @return This {@link HTTPRequest} for chaining and convenience.
+     */
+    public HTTPRequest setRequestBodyProvider(HTTPRequestBodyProvider provider) {
+        this.bodyProvider = provider;
+        return this;
+    }
+
+    /**
      * Sets the BKS trust store to use for this {@link HTTPRequest} for server authentication.
      *
      * @param trustStore The BKS trust store {@link InputStream}.
@@ -523,7 +537,7 @@ public class HTTPRequest {
 
     /**
      * Queues this {@link HTTPRequest} for serial asynchronous execution. Note that queue will not wait for {@link HTTPRequest}s executed using {@link HTTPRequest#executeAsync()} to finish, and such requests will never be considered as part of the queue at any time.
-     *
+     * <p>
      * To hook to events or listen to the server response, you must provide an {@link HTTPResponseListener} using {@link HTTPRequest#setHTTPResponseListener(HTTPResponseListener)}.
      */
     public void queue() {
@@ -535,6 +549,11 @@ public class HTTPRequest {
             @Override
             public void run() {
                 HttpURLConnection urlConnection = buildURLConnection();
+
+                // Get request body now if there's a provider
+                if (bodyProvider != null) {
+                    body = bodyProvider.getRequestBody();
+                }
 
                 // Update socket factory as needed
                 if (urlConnection instanceof HttpsURLConnection) {
