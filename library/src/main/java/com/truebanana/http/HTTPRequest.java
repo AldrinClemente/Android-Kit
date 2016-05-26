@@ -545,12 +545,10 @@ public class HTTPRequest {
                     } catch (GeneralSecurityException e) {
                         e.printStackTrace();
                         onRequestError(HTTPRequestError.SECURITY_EXCEPTION);
-                        onPostExecute();
                         return; // Terminate now
                     } catch (IOException e) {
                         e.printStackTrace();
                         onRequestError(HTTPRequestError.KEYSTORE_INVALID);
-                        onPostExecute();
                         return; // Terminate now
                     }
 
@@ -607,7 +605,6 @@ public class HTTPRequest {
                 } catch (IOException e) {
                     e.printStackTrace();
                     onRequestError(HTTPRequestError.OTHER);
-                    onPostExecute();
                     return; // Terminate now
                 }
 
@@ -617,12 +614,13 @@ public class HTTPRequest {
                     content = urlConnection.getInputStream();
                 } catch (SocketTimeoutException e) { // Timeout
                     e.printStackTrace();
-                    onRequestError(HTTPRequestError.TIMEOUT);
                     onPostExecute();
+                    onRequestError(HTTPRequestError.TIMEOUT);
                     return; // Terminate now
                 } catch (IOException e) { // All other exceptions
                     e.printStackTrace();
                     content = urlConnection.getErrorStream();
+                    onPostExecute();
                 }
 
                 // Pre-process the response
@@ -630,7 +628,6 @@ public class HTTPRequest {
 
                 if (response.isConnectionError()) {
                     onRequestError(HTTPRequestError.OTHER);
-                    onPostExecute();
                     return; // Terminate now
                 }
 
