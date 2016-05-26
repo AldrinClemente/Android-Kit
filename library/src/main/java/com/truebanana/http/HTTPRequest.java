@@ -59,7 +59,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -129,6 +131,9 @@ public class HTTPRequest {
     private static int defaultConnectTimeout = 10000;
     private static HTTPResponseListener defaultResponseListener = new BasicResponseListener() {
     };
+
+    private static Queue<HTTPRequest> requestQueue = new LinkedBlockingQueue<>();
+    private static HTTPRequest pendingRequest = null;
 
     Handler handler = new Handler();
 
@@ -532,19 +537,6 @@ public class HTTPRequest {
      * Executes this {@link HTTPRequest} asynchronously. To hook to events or listen to the server response, you must provide an {@link HTTPResponseListener} using {@link HTTPRequest#setHTTPResponseListener(HTTPResponseListener)}.
      */
     public void executeAsync() {
-        executeAsync(true);
-    }
-
-    /**
-     * Queues this {@link HTTPRequest} for serial asynchronous execution. Note that queue will not wait for {@link HTTPRequest}s executed using {@link HTTPRequest#executeAsync()} to finish, and such requests will never be considered as part of the queue at any time.
-     * <p>
-     * To hook to events or listen to the server response, you must provide an {@link HTTPResponseListener} using {@link HTTPRequest#setHTTPResponseListener(HTTPResponseListener)}.
-     */
-    public void queue() {
-        executeAsync(false);
-    }
-
-    private void executeAsync(boolean executeInParallel) {
         Async.executeAsync(new Runnable() {
             @Override
             public void run() {
@@ -573,10 +565,9 @@ public class HTTPRequest {
 
                     if (!verifySSL) {
                         httpsURLConnection.setHostnameVerifier(new NoVerifyHostnameVerifier());
-                    }
-
-                    if (logTag != null) {
-                        Log.d(logTag + " SSL Verification Disabled", "**********");
+                        if (logTag != null) {
+                            Log.d(logTag + " SSL Verification Disabled", "**********");
+                        }
                     }
                 }
 
@@ -628,9 +619,10 @@ public class HTTPRequest {
                 }
 
                 // Get the response
-                InputStream content = null;
+                InputStream content;
                 try {
                     content = urlConnection.getInputStream();
+                    onPostExecute();
                 } catch (SocketTimeoutException e) { // Timeout
                     e.printStackTrace();
                     onPostExecute();
@@ -661,8 +653,30 @@ public class HTTPRequest {
 
                 // Terminate the connection
                 urlConnection.disconnect();
+
+                if (HTTPRequest.pendingRequest == HTTPRequest.this) {
+                    HTTPRequest.pendingRequest = null;
+                    executeFromQueueIfFree();
+                }
             }
-        }, executeInParallel);
+        });
+    }
+
+    /**
+     * Queues this {@link HTTPRequest} for serial asynchronous execution. Note that queue will not wait for {@link HTTPRequest}s executed using {@link HTTPRequest#executeAsync()} to finish, and such requests will never be considered as part of the queue at any time.
+     * <p/>
+     * To hook to events or listen to the server response, you must provide an {@link HTTPResponseListener} using {@link HTTPRequest#setHTTPResponseListener(HTTPResponseListener)}.
+     */
+    public void queue() {
+        HTTPRequest.requestQueue.add(this);
+        executeFromQueueIfFree();
+    }
+
+    private void executeFromQueueIfFree() {
+        if (HTTPRequest.pendingRequest == null) {
+            HTTPRequest.pendingRequest = requestQueue.remove();
+            HTTPRequest.pendingRequest.executeAsync();
+        }
     }
 
     private static class NoVerifyTrustManager implements X509TrustManager {
