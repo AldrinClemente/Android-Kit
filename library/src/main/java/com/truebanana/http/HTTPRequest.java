@@ -55,13 +55,14 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -132,7 +133,7 @@ public class HTTPRequest {
     private static HTTPResponseListener defaultResponseListener = new BasicResponseListener() {
     };
 
-    private static Queue<HTTPRequest> requestQueue = new LinkedBlockingQueue<>();
+    private static Deque<HTTPRequest> requestQueue = new LinkedBlockingDeque<>();
     private static HTTPRequest pendingRequest = null;
 
     Handler handler = new Handler();
@@ -535,8 +536,10 @@ public class HTTPRequest {
 
     /**
      * Executes this {@link HTTPRequest} asynchronously. To hook to events or listen to the server response, you must provide an {@link HTTPResponseListener} using {@link HTTPRequest#setHTTPResponseListener(HTTPResponseListener)}.
+     *
+     * @return This {@link HTTPRequest}
      */
-    public void executeAsync() {
+    public HTTPRequest executeAsync() {
         Async.executeAsync(new Runnable() {
             @Override
             public void run() {
@@ -660,16 +663,43 @@ public class HTTPRequest {
                 }
             }
         });
+        return this;
     }
 
     /**
-     * Queues this {@link HTTPRequest} for serial asynchronous execution. Note that queue will not wait for {@link HTTPRequest}s executed using {@link HTTPRequest#executeAsync()} to finish, and such requests will never be considered as part of the queue at any time.
+     * Queues this {@link HTTPRequest} for serial asynchronous execution. Note that the queue will not wait for {@link HTTPRequest}s executed using {@link HTTPRequest#executeAsync()} to finish, and such requests will never be considered as part of the queue at any time.
      * <p>
      * To hook to events or listen to the server response, you must provide an {@link HTTPResponseListener} using {@link HTTPRequest#setHTTPResponseListener(HTTPResponseListener)}.
+     *
+     * @return This {@link HTTPRequest}
      */
-    public void queue() {
+    public HTTPRequest queue() {
         HTTPRequest.requestQueue.add(this);
         executeFromQueueIfFree();
+        return this;
+    }
+
+    /**
+     * Inserts this {@link HTTPRequest} to the front of the queue for serial asynchronous execution. Note that the queue will not wait for {@link HTTPRequest}s executed using {@link HTTPRequest#executeAsync()} to finish, and such requests will never be considered as part of the queue at any time.
+     * <p>
+     * To hook to events or listen to the server response, you must provide an {@link HTTPResponseListener} using {@link HTTPRequest#setHTTPResponseListener(HTTPResponseListener)}.
+     *
+     * @return This {@link HTTPRequest}
+     */
+    public HTTPRequest queueFirst() {
+        HTTPRequest.requestQueue.addFirst(this);
+        executeFromQueueIfFree();
+        return this;
+    }
+
+    /**
+     * Removes this {@link HTTPRequest} from the queue.
+     *
+     * @return This {@link HTTPRequest}
+     */
+    public HTTPRequest dequeue() {
+        HTTPRequest.requestQueue.remove(this);
+        return this;
     }
 
     private void executeFromQueueIfFree() {
