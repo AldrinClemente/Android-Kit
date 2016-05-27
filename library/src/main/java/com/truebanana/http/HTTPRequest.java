@@ -673,7 +673,7 @@ public class HTTPRequest {
     }
 
     private void executeFromQueueIfFree() {
-        if (HTTPRequest.pendingRequest == null) {
+        if (HTTPRequest.pendingRequest == null && !HTTPRequest.requestQueue.isEmpty()) {
             HTTPRequest.pendingRequest = requestQueue.remove();
             HTTPRequest.pendingRequest.executeAsync();
         }
