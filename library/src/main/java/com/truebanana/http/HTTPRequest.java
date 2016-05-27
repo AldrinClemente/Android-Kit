@@ -664,7 +664,7 @@ public class HTTPRequest {
 
     /**
      * Queues this {@link HTTPRequest} for serial asynchronous execution. Note that queue will not wait for {@link HTTPRequest}s executed using {@link HTTPRequest#executeAsync()} to finish, and such requests will never be considered as part of the queue at any time.
-     * <p/>
+     * <p>
      * To hook to events or listen to the server response, you must provide an {@link HTTPResponseListener} using {@link HTTPRequest#setHTTPResponseListener(HTTPResponseListener)}.
      */
     public void queue() {
@@ -677,6 +677,22 @@ public class HTTPRequest {
             HTTPRequest.pendingRequest = requestQueue.remove();
             HTTPRequest.pendingRequest.executeAsync();
         }
+    }
+
+    /**
+     * Returns the request queue
+     *
+     * @return The {@link HTTPRequest} {@link Queue}
+     */
+    public static Queue<HTTPRequest> getRequestQueue() {
+        return requestQueue;
+    }
+
+    /**
+     * Clears the request queue
+     */
+    public static void clearRequestQueue() {
+        requestQueue.clear();
     }
 
     private static class NoVerifyTrustManager implements X509TrustManager {
