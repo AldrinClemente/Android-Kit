@@ -534,6 +534,18 @@ public class HTTPRequest {
         });
     }
 
+    private void onRequestTerminated() {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (HTTPRequest.pendingRequest == HTTPRequest.this) {
+                    HTTPRequest.pendingRequest = null;
+                    executeFromQueueIfFree();
+                }
+            }
+        });
+    }
+
     /**
      * Executes this {@link HTTPRequest} asynchronously. To hook to events or listen to the server response, you must provide an {@link HTTPResponseListener} using {@link HTTPRequest#setHTTPResponseListener(HTTPResponseListener)}.
      *
@@ -559,10 +571,12 @@ public class HTTPRequest {
                     } catch (GeneralSecurityException e) {
                         e.printStackTrace();
                         onRequestError(HTTPRequestError.SECURITY_EXCEPTION);
+                        onRequestTerminated();
                         return; // Terminate now
                     } catch (IOException e) {
                         e.printStackTrace();
                         onRequestError(HTTPRequestError.KEYSTORE_INVALID);
+                        onRequestTerminated();
                         return; // Terminate now
                     }
 
@@ -618,6 +632,7 @@ public class HTTPRequest {
                 } catch (IOException e) {
                     e.printStackTrace();
                     onRequestError(HTTPRequestError.OTHER);
+                    onRequestTerminated();
                     return; // Terminate now
                 }
 
@@ -630,6 +645,7 @@ public class HTTPRequest {
                     e.printStackTrace();
                     onPostExecute();
                     onRequestError(HTTPRequestError.TIMEOUT);
+                    onRequestTerminated();
                     return; // Terminate now
                 } catch (IOException e) { // All other exceptions
                     e.printStackTrace();
@@ -657,10 +673,7 @@ public class HTTPRequest {
                 // Terminate the connection
                 urlConnection.disconnect();
 
-                if (HTTPRequest.pendingRequest == HTTPRequest.this) {
-                    HTTPRequest.pendingRequest = null;
-                    executeFromQueueIfFree();
-                }
+                onRequestTerminated();
             }
         });
         return this;
