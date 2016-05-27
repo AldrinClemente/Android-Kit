@@ -658,6 +658,7 @@ public class HTTPRequest {
 
                 if (response.isConnectionError()) {
                     onRequestError(HTTPRequestError.OTHER);
+                    onRequestTerminated();
                     return; // Terminate now
                 }
 
