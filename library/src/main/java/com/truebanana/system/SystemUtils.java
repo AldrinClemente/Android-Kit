@@ -24,13 +24,7 @@
 
 package com.truebanana.system;
 
-import android.app.ActivityManager;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.Signature;
 import android.content.res.Resources;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
@@ -38,12 +32,8 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
-import android.util.Base64;
 
 import java.net.NetworkInterface;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -72,76 +62,6 @@ public class SystemUtils {
      */
     public static String getDeviceID(Context context) {
         return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
-    }
-
-    // Process
-    // ************************************************************************
-
-    /**
-     * Checks if an app or process with the specified package name is running
-     *
-     * @param context
-     * @param packageName The package name of the app or process to check
-     * @return <b>true</b> if running, <b>false</b> otherwise
-     */
-    public static Boolean isAppRunning(Context context, String packageName) {
-        ActivityManager vActivityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.RunningAppProcessInfo> vProcessInfo = vActivityManager.getRunningAppProcesses();
-        for (int i = 0; i < vProcessInfo.size(); i++) {
-            if (vProcessInfo.get(i).processName.equals(packageName)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Key Hash
-    // ************************************************************************
-
-    /**
-     * Returns the key hashes of the signatures of the app with the specified package name
-     * which may be needed when integrating with 3rd party services such as Facebook. Note that
-     * Android apps usually only have one signature.
-     *
-     * @param context
-     * @param packageName The package name of the app
-     * @return The key hashes
-     */
-    public static List<String> getKeyHashes(Context context, String packageName) {
-        try {
-            List<String> hashes = new ArrayList<>();
-            PackageInfo info = context.getPackageManager().getPackageInfo(packageName, PackageManager.GET_SIGNATURES);
-            for (Signature signature : info.signatures) {
-                MessageDigest md = MessageDigest.getInstance("SHA");
-                md.update(signature.toByteArray());
-                hashes.add(Base64.encodeToString(md.digest(), Base64.DEFAULT));
-            }
-            return hashes;
-        } catch (PackageManager.NameNotFoundException e) {
-        } catch (NoSuchAlgorithmException e) {
-        }
-        return null;
-    }
-
-    /**
-     * Since Android apps usually just have one signature, this convenience method returns the key
-     * hash of the first signature of the app with the specified package name which may be needed
-     * when integrating with 3rd party services such as Facebook.
-     *
-     * @param context
-     * @param packageName The package name of the app
-     * @return The key hash
-     */
-    public static String getKeyHash(Context context, String packageName) {
-        try {
-            PackageInfo info = context.getPackageManager().getPackageInfo(packageName, PackageManager.GET_SIGNATURES);
-            MessageDigest md = MessageDigest.getInstance("SHA");
-            md.update(info.signatures[0].toByteArray());
-            return Base64.encodeToString(md.digest(), Base64.DEFAULT);
-        } catch (PackageManager.NameNotFoundException e) {
-        } catch (NoSuchAlgorithmException e) {
-        }
-        return null;
     }
 
     // Metrics
@@ -225,24 +145,29 @@ public class SystemUtils {
      * Returns MAC address of the given interface name
      *
      * @param interfaceName "<b>eth0</b>", "<b>wlan0</b>" or <b>null</b> to use first interface
-     * @return MAC address or empty string
+     * @return The MAC address or <b>null</b> if it fails
      */
     public static String getMACAddress(String interfaceName) {
         try {
             List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
-            for (NetworkInterface intf : interfaces) {
+            for (NetworkInterface networkInterface : interfaces) {
                 if (interfaceName != null) {
-                    if (!intf.getName().equalsIgnoreCase(interfaceName))
+                    if (!networkInterface.getName().equalsIgnoreCase(interfaceName)) {
                         continue;
+                    }
                 }
-                byte[] mac = intf.getHardwareAddress();
+
+                byte[] mac = networkInterface.getHardwareAddress();
+
                 if (mac == null)
                     return "";
                 StringBuilder buf = new StringBuilder();
-                for (int idx = 0; idx < mac.length; idx++)
-                    buf.append(String.format("%02X:", mac[idx]));
-                if (buf.length() > 0)
+                for (int i = 0; i < mac.length; i++) {
+                    buf.append(String.format("%02X:", mac[i]));
+                }
+                if (buf.length() > 0) {
                     buf.deleteCharAt(buf.length() - 1);
+                }
                 return buf.toString();
             }
         } catch (Exception e) {
