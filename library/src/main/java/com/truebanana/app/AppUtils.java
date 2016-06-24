@@ -363,4 +363,24 @@ public class AppUtils {
     public static String getKeyHash(Context context) {
         return AppUtils.getKeyHash(context, context.getPackageName());
     }
+
+    // Launch URL
+    // ************************************************************************
+
+    /**
+     * Launches the URL specified.
+     *
+     * @param context
+     * @param url The URL to launch.
+     * @return <b>true</b> if the URL is valid and there are available apps to handle it, <b>false</b> otherwise
+     */
+    public static boolean launchURL(Context context, String url) {
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        try {
+            context.startActivity(intent);
+            return true;
+        } catch (ActivityNotFoundException e) {
+            return false;
+        }
+    }
 }
