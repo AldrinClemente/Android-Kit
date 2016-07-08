@@ -42,6 +42,25 @@ public class BitmapLoader {
         }
     }
 
+    /**
+     * Asynchronously decodes a {@link Bitmap} from a URL and displays it in an {@link ImageView}.
+     *
+     * @param url       The URL of the {@link Bitmap} to display
+     * @param imageView The {@link ImageView} where the {@link Bitmap} will be displayed
+     */
+    public static void displayBitmap(final String url, final ImageView imageView) {
+        displayBitmap(url, 0, 0, imageView);
+    }
+
+    /**
+     * Asynchronously decodes a {@link Bitmap} from a URL, resizes it first then displays it in an {@link ImageView}.
+     * Use this to save memory when you have to display unnecessarily large {@link Bitmap}s.
+     *
+     * @param url       The URL of the {@link Bitmap} to display
+     * @param width     The desired width, in pixels
+     * @param height    The desired height, in pixels
+     * @param imageView The {@link ImageView} where the {@link Bitmap} will be displayed
+     */
     public static void displayBitmap(final String url, int width, int height, final ImageView imageView) {
         initializeCacheAsNeeded();
         Bitmap bitmap = cache.get(url);
