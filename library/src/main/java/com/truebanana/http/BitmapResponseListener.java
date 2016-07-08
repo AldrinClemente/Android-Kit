@@ -41,6 +41,10 @@ public abstract class BitmapResponseListener implements HTTPResponseListener {
         this.height = height;
     }
 
+    public BitmapResponseListener() {
+        this(0, 0);
+    }
+
     /**
      * Called when the response content has been successfully decoded into a {@link Bitmap}.
      *

@@ -110,11 +110,19 @@ public class BitmapUtils {
     // Decode File
     // *********************************************************************************************
 
+    public static Bitmap decodeFile(File file) {
+        return decodeFile(file, 0, 0);
+    }
+
     public static Bitmap decodeFile(File file, int targetWidth, int targetHeight) {
-        BitmapFactory.Options options = getBounds(file);
-        options.inJustDecodeBounds = false;
-        options.inSampleSize = getInSampleSize(options, targetWidth, targetHeight);
-        return BitmapFactory.decodeFile(file.getPath(), options);
+        if (targetWidth > 1 && targetHeight > 1) {
+            BitmapFactory.Options options = getBounds(file);
+            options.inJustDecodeBounds = false;
+            options.inSampleSize = getInSampleSize(options, targetWidth, targetHeight);
+            return BitmapFactory.decodeFile(file.getPath(), options);
+        } else {
+            return BitmapFactory.decodeFile(file.getPath());
+        }
     }
 
     public static DecodeFileTask decodeFileAsync(File file, int targetWidth, int targetHeight, DecodeFileListener listener) {
@@ -126,15 +134,23 @@ public class BitmapUtils {
     // Decode Stream
     // *********************************************************************************************
 
+    public static Bitmap decodeStream(InputStream inputStream) {
+        return decodeStream(inputStream, 0, 0);
+    }
+
     public static Bitmap decodeStream(InputStream inputStream, int targetWidth, int targetHeight) {
         try {
             byte[] bytes = IOUtils.toByteArray(inputStream);
             InputStream is1 = new ByteArrayInputStream(bytes);
             InputStream is2 = new ByteArrayInputStream(bytes);
-            BitmapFactory.Options options = getBounds(is1);
-            options.inJustDecodeBounds = false;
-            options.inSampleSize = getInSampleSize(options, targetWidth, targetHeight);
-            return BitmapFactory.decodeStream(is2, new Rect(), options);
+            if (targetWidth > 1 && targetHeight > 1) {
+                BitmapFactory.Options options = getBounds(is1);
+                options.inJustDecodeBounds = false;
+                options.inSampleSize = getInSampleSize(options, targetWidth, targetHeight);
+                return BitmapFactory.decodeStream(is2, new Rect(), options);
+            } else {
+                return BitmapFactory.decodeStream(is2);
+            }
         } catch (IOException e) {
             e.printStackTrace();
             return null;
@@ -144,11 +160,19 @@ public class BitmapUtils {
     // Decode Byte Array
     // *********************************************************************************************
 
+    public static Bitmap decodeBytes(byte[] bytes) {
+        return decodeBytes(bytes, 0, 0);
+    }
+
     public static Bitmap decodeBytes(byte[] bytes, int targetWidth, int targetHeight) {
-        BitmapFactory.Options options = getBounds(bytes);
-        options.inJustDecodeBounds = false;
-        options.inSampleSize = getInSampleSize(options, targetWidth, targetHeight);
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
+        if (targetWidth > 1 && targetHeight > 1) {
+            BitmapFactory.Options options = getBounds(bytes);
+            options.inJustDecodeBounds = false;
+            options.inSampleSize = getInSampleSize(options, targetWidth, targetHeight);
+            return BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
+        } else {
+            return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        }
     }
 
     // Decode From URL
@@ -378,7 +402,7 @@ public class BitmapUtils {
                 stackpointer = radius;
                 for (y = 0; y < h; y++) {
                     // Preserve alpha channel: ( 0xff000000 & pix[yi] )
-                    pix[yi] = ( 0xff000000 & pix[yi] ) | ( dv[rsum] << 16 ) | ( dv[gsum] << 8 ) | dv[bsum];
+                    pix[yi] = (0xff000000 & pix[yi]) | (dv[rsum] << 16) | (dv[gsum] << 8) | dv[bsum];
 
                     rsum -= routsum;
                     gsum -= goutsum;
