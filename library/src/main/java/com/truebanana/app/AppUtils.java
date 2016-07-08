@@ -364,18 +364,18 @@ public class AppUtils {
         return AppUtils.getKeyHash(context, context.getPackageName());
     }
 
-    // Launch URL
+    // URI
     // ************************************************************************
 
     /**
-     * Launches the URL specified.
+     * Launches the URI specified.
      *
      * @param context
-     * @param url The URL to launch.
-     * @return <b>true</b> if the URL is valid and there are available apps to handle it, <b>false</b> otherwise
+     * @param uri The URI to launch.
+     * @return <b>true</b> if the URI is valid and there are available apps to handle it, <b>false</b> otherwise
      */
-    public static boolean launchURL(Context context, String url) {
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+    public static boolean launchURI(Context context, String uri) {
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
         try {
             context.startActivity(intent);
             return true;
