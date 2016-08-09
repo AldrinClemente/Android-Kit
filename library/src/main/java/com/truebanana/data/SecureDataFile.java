@@ -27,7 +27,7 @@ package com.truebanana.data;
 import android.content.Context;
 
 import com.truebanana.async.Async;
-import com.truebanana.crypto.Crypto;
+import com.truebanana.log.Log;
 
 import org.apache.commons.io.FileUtils;
 
@@ -50,12 +50,16 @@ public class SecureDataFile extends SecureData {
 
     public static SecureDataFile getDataFile(Context context, String fileName, String password) {
         if (loadedDataFiles.containsKey(fileName)) {
+            Log.d("SecureDataFile", "Loading cached data file");
             return loadedDataFiles.get(fileName);
         } else {
+            Log.d("SecureDataFile", "Loading data file from disk");
             byte[] data = new byte[0];
             try {
                 data = FileUtils.readFileToByteArray(new File(context.getFilesDir().getPath(), fileName));
+                Log.d("SecureDataFile", "Successfully read data file");
             } catch (IOException e) {
+                Log.d("SecureDataFile", "Could not read data file");
             }
 
             SecureDataFile dataFile = new SecureDataFile(context, data, fileName, password);
@@ -76,8 +80,10 @@ public class SecureDataFile extends SecureData {
 
     public synchronized void save() {
         try {
-            FileUtils.writeByteArrayToFile(new File(context.getFilesDir().getPath(), fileName), Crypto.encrypt(toByteArray(), password));
+            FileUtils.writeByteArrayToFile(new File(context.getFilesDir().getPath(), fileName), toByteArray());
+            Log.d("SecureDataFile", "Successfully written data file");
         } catch (IOException e) {
+            Log.d("SecureDataFile", "Could not write data file");
         }
     }
 }

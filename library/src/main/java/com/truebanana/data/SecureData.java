@@ -49,9 +49,14 @@ public class SecureData {
 
     public void load(byte[] data) {
         if (data != null && data.length > 0) {
-            load(Crypto.decrypt(data, password));
+            byte[] decryptedData = Crypto.decrypt(data, password, SecureData.Spec.getInstance());
+            if (decryptedData != null) {
+                load(new String(decryptedData));
+            } else {
+                load(new JSONObject());
+            }
         } else {
-            load("{}");
+            load(new JSONObject());
         }
     }
 
@@ -79,9 +84,9 @@ public class SecureData {
             return false;
         }
     }
-	
+
 	/*
-	 * Data Exporters
+     * Data Exporters
 	 * ************************************************************************
 	 */
 
@@ -93,7 +98,7 @@ public class SecureData {
     public String toString(boolean encrypted) {
         String stringData = data.toString();
         if (encrypted) {
-            stringData = new String(Crypto.encrypt(stringData.getBytes(), password));
+            stringData = new String(Crypto.encrypt(stringData.getBytes(), password, SecureData.Spec.getInstance()));
         }
         return stringData;
     }
@@ -103,11 +108,15 @@ public class SecureData {
     }
 
     public byte[] toByteArray(boolean encrypted) {
-        return toString(encrypted).getBytes();
+        byte[] bytes = data.toString().getBytes();
+        if (encrypted) {
+            return Crypto.encrypt(bytes, password, SecureData.Spec.getInstance());
+        }
+        return bytes;
     }
-	
+
 	/*
-	 * Data Getters and Setters/Putters
+     * Data Getters and Setters/Putters
 	 * ************************************************************************
 	 */
 
@@ -265,13 +274,32 @@ public class SecureData {
         data.remove(key);
         return this;
     }
-	
+
 	/*
-	 * Utility Methods
+     * Utility Methods
 	 * ************************************************************************
 	 */
 
     public boolean isEmpty() {
         return data.length() == 0;
+    }
+
+
+	/*
+     * Crypto Spec
+	 * ************************************************************************
+	 */
+
+    public static class Spec extends Crypto.Spec {
+        private static final Spec INSTANCE = new Spec();
+
+        private Spec() {
+            super();
+            this.setKeyDerivationIterations(128);
+        }
+
+        public static Spec getInstance() {
+            return INSTANCE;
+        }
     }
 }
