@@ -36,7 +36,24 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Represents a response from the remote host.
+ * Used to mock an HTTP response for testing.<br />
+ * <br />
+ * Example:
+ * <pre>
+ * {@code
+ *
+ * MockResponse mockResponse = new MockResponse.Builder()
+ *     .setContent(context.getResources().openRawResource(R.raw.mock_response_posts))
+ *     .setStatusCode(200)
+ *     .build();
+ *
+ * HTTPRequest.create("http://my.website.com/posts")
+ *     .setHTTPResponseListener(myListener)
+ *     .setLogTag("Get Posts")
+ *     .setMockResponse(mockResponse)
+ *     .executeAsync();
+ * }
+ * </pre>
  */
 public class MockResponse extends HTTPResponse {
     private MockResponse() {
