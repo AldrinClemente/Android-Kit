@@ -128,6 +128,8 @@ public class HTTPRequest {
     private InputStream keyStore, trustStore;
     private String keyStorePassword, trustStorePassword;
 
+    private MockResponse mockResponse;
+
     private static int defaultReadTimeout = 10000;
     private static int defaultConnectTimeout = 10000;
     private static HTTPResponseListener defaultResponseListener = new BasicResponseListener() {
@@ -466,6 +468,17 @@ public class HTTPRequest {
     }
 
     /**
+     * Sets a {@link MockResponse} to be returned when the request finishes. This response will be returned whether or not the request actually succeeds.
+     *
+     * @param mockResponse The {@link MockResponse}.
+     * @return This {@link HTTPRequest} for chaining and convenience.
+     */
+    public HTTPRequest setMockResponse(MockResponse mockResponse) {
+        this.mockResponse = mockResponse;
+        return this;
+    }
+
+    /**
      * Enables logging of debug information for this {@link HTTPRequest}. This will automatically log the request URL, request headers, request body, response message, response content and other useful information in the LOGCAT.
      *
      * @param tag The tag to use for logging.
@@ -614,67 +627,84 @@ public class HTTPRequest {
                     }
                 }
 
-                // Trigger pre-execute since preparations are complete
-                onPreExecute();
+                if (mockResponse == null) {
+                    // Trigger pre-execute since preparations are complete
+                    onPreExecute();
 
-                // Write our request body
-                try {
-                    if (multiPartContent != null) {
-                        multiPartContent.write(urlConnection.getOutputStream());
-                    } else if (body != null) {
-                        OutputStream os = urlConnection.getOutputStream();
-                        OutputStreamWriter writer = new OutputStreamWriter(os);
-                        writer.write(body);
-                        writer.flush();
-                        writer.close();
-                        os.close();
+                    // Write our request body
+                    try {
+                        if (multiPartContent != null) {
+                            multiPartContent.write(urlConnection.getOutputStream());
+                        } else if (body != null) {
+                            OutputStream os = urlConnection.getOutputStream();
+                            OutputStreamWriter writer = new OutputStreamWriter(os);
+                            writer.write(body);
+                            writer.flush();
+                            writer.close();
+                            os.close();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        onRequestError(HTTPRequestError.OTHER);
+                        onRequestTerminated();
+                        return; // Terminate now
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    onRequestError(HTTPRequestError.OTHER);
+
+                    // Get the response
+                    InputStream content;
+                    try {
+                        content = urlConnection.getInputStream();
+                        onPostExecute();
+                    } catch (SocketTimeoutException e) { // Timeout
+                        e.printStackTrace();
+                        onPostExecute();
+                        onRequestError(HTTPRequestError.TIMEOUT);
+                        onRequestTerminated();
+                        return; // Terminate now
+                    } catch (IOException e) { // All other exceptions
+                        e.printStackTrace();
+                        content = urlConnection.getErrorStream();
+                        onPostExecute();
+                    }
+
+                    // Pre-process the response
+                    final HTTPResponse response = HTTPResponse.from(HTTPRequest.this, urlConnection, content);
+
+                    if (response.isConnectionError()) {
+                        onRequestError(HTTPRequestError.OTHER);
+                        onRequestTerminated();
+                        return; // Terminate now
+                    }
+
+                    // Log response
+                    if (logTag != null) {
+                        Log.d(logTag + " Response Message", response.getResponseMessage());
+                        Log.d(logTag + " Response Content", response.getStringContent());
+                    }
+
+                    // Trigger request completed and return the response
+                    onRequestCompleted(response);
+
+                    // Terminate the connection
+                    urlConnection.disconnect();
+
                     onRequestTerminated();
-                    return; // Terminate now
-                }
-
-                // Get the response
-                InputStream content;
-                try {
-                    content = urlConnection.getInputStream();
+                } else {
+                    onPreExecute();
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     onPostExecute();
-                } catch (SocketTimeoutException e) { // Timeout
-                    e.printStackTrace();
-                    onPostExecute();
-                    onRequestError(HTTPRequestError.TIMEOUT);
+                    if (logTag != null) {
+                        Log.d(logTag + " Response Message", mockResponse.getResponseMessage());
+                        Log.d(logTag + " Response Content", mockResponse.getStringContent());
+                    }
+                    onRequestCompleted(mockResponse);
+                    urlConnection.disconnect();
                     onRequestTerminated();
-                    return; // Terminate now
-                } catch (IOException e) { // All other exceptions
-                    e.printStackTrace();
-                    content = urlConnection.getErrorStream();
-                    onPostExecute();
                 }
-
-                // Pre-process the response
-                final HTTPResponse response = HTTPResponse.from(HTTPRequest.this, urlConnection, content);
-
-                if (response.isConnectionError()) {
-                    onRequestError(HTTPRequestError.OTHER);
-                    onRequestTerminated();
-                    return; // Terminate now
-                }
-
-                // Log response
-                if (logTag != null) {
-                    Log.d(logTag + " Response Message", response.getResponseMessage());
-                    Log.d(logTag + " Response Content", response.getStringContent());
-                }
-
-                // Trigger request completed and return the response
-                onRequestCompleted(response);
-
-                // Terminate the connection
-                urlConnection.disconnect();
-
-                onRequestTerminated();
             }
         });
         return this;
@@ -682,7 +712,7 @@ public class HTTPRequest {
 
     /**
      * Queues this {@link HTTPRequest} for serial asynchronous execution. Note that the queue will not wait for {@link HTTPRequest}s executed using {@link HTTPRequest#executeAsync()} to finish, and such requests will never be considered as part of the queue at any time.
-     * <p>
+     * <p/>
      * To hook to events or listen to the server response, you must provide an {@link HTTPResponseListener} using {@link HTTPRequest#setHTTPResponseListener(HTTPResponseListener)}.
      *
      * @return This {@link HTTPRequest}
@@ -695,7 +725,7 @@ public class HTTPRequest {
 
     /**
      * Inserts this {@link HTTPRequest} to the front of the queue for serial asynchronous execution. Note that the queue will not wait for {@link HTTPRequest}s executed using {@link HTTPRequest#executeAsync()} to finish, and such requests will never be considered as part of the queue at any time.
-     * <p>
+     * <p/>
      * To hook to events or listen to the server response, you must provide an {@link HTTPResponseListener} using {@link HTTPRequest#setHTTPResponseListener(HTTPResponseListener)}.
      *
      * @return This {@link HTTPRequest}

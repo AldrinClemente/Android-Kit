@@ -40,15 +40,15 @@ import java.util.Map;
  * Represents a response from the remote host.
  */
 public class HTTPResponse {
-    private byte[] content = new byte[0];
-    private String stringContent;
-    private int statusCode = -1;
-    private String responseMessage;
-    private Map<String, List<String>> headers;
-    private String requestURL;
-    private HTTPRequest originalRequest;
+    protected byte[] content = new byte[0];
+    protected String stringContent;
+    protected int statusCode = -1;
+    protected String responseMessage;
+    protected Map<String, List<String>> headers;
+    protected String requestURL;
+    protected HTTPRequest originalRequest;
 
-    private HTTPResponse() {
+    protected HTTPResponse() {
     }
 
     protected static HTTPResponse from(HTTPRequest request, HttpURLConnection connection, InputStream content) {
