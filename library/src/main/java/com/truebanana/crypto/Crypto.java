@@ -261,7 +261,7 @@ public class Crypto {
     }
 
     public enum Padding {
-        NO_PADDING("NoPadding"),
+        NONE("NoPadding"),
         PKCS5("PKCS5Padding"),
         PKCS7("PKCS7Padding");
 
@@ -277,43 +277,54 @@ public class Crypto {
     }
 
     public enum CipherTransformation {
-        AES_CBC_NoPadding("AES/CBC/NoPadding"),
-        AES_CBC_PKCS5Padding("AES/CBC/PKCS5Padding"),
-        AES_CBC_PKCS7Padding("AES/CBC/PKCS7Padding"),
-        AES_ECB_NoPadding("AES/ECB/NoPadding"),
-        AES_ECB_PKCS5Padding("AES/ECB/PKCS5Padding"),
-        AES_ECB_PKCS7Padding("AES/ECB/PKCS7Padding"),
+        AES_CBC_NoPadding("AES", "CBC", "NoPadding"),
+        AES_CBC_PKCS5Padding("AES", "CBC", "PKCS5Padding"),
+        AES_CBC_PKCS7Padding("AES", "CBC", "PKCS7Padding"),
+        AES_ECB_NoPadding("AES", "ECB", "NoPadding"),
+        AES_ECB_PKCS5Padding("AES", "ECB", "PKCS5Padding"),
+        AES_ECB_PKCS7Padding("AES", "ECB", "PKCS7Padding"),
 
-        DES_CBC_NoPadding("DES/CBC/NoPadding"),
-        DES_CBC_PKCS5Padding("DES/CBC/PKCS5Padding"),
-        DES_CBC_PKCS7Padding("DES/CBC/PKCS7Padding"),
-        DES_ECB_NoPadding("DES/ECB/NoPadding"),
-        DES_ECB_PKCS5Padding("DES/ECB/PKCS5Padding"),
-        DES_ECB_PKCS7Padding("DES/ECB/PKCS7Padding"),
+        DES_CBC_NoPadding("DES", "CBC", "NoPadding"),
+        DES_CBC_PKCS5Padding("DES", "CBC", "PKCS5Padding"),
+        DES_CBC_PKCS7Padding("DES", "CBC", "PKCS7Padding"),
+        DES_ECB_NoPadding("DES", "ECB", "NoPadding"),
+        DES_ECB_PKCS5Padding("DES", "ECB", "PKCS5Padding"),
+        DES_ECB_PKCS7Padding("DES", "ECB", "PKCS7Padding"),
 
-        DESede_CBC_NoPadding("DESede/CBC/NoPadding"),
-        DESede_CBC_PKCS5Padding("DESede/CBC/PKCS5Padding"),
-        DESede_CBC_PKCS7Padding("DESede/CBC/PKCS7Padding"),
-        DESede_ECB_NoPadding("DESede/ECB/NoPadding"),
-        DESede_ECB_PKCS5Padding("DESede/ECB/PKCS5Padding"),
-        DESede_ECB_PKCS7Padding("DESede/ECB/PKCS7Padding"),
+        DESede_CBC_NoPadding("DESede", "CBC", "NoPadding"),
+        DESede_CBC_PKCS5Padding("DESede", "CBC", "PKCS5Padding"),
+        DESede_CBC_PKCS7Padding("DESede", "CBC", "PKCS7Padding"),
+        DESede_ECB_NoPadding("DESede", "ECB", "NoPadding"),
+        DESede_ECB_PKCS5Padding("DESede", "ECB", "PKCS5Padding"),
+        DESede_ECB_PKCS7Padding("DESede", "ECB", "PKCS7Padding"),
 
-        RSA_ECB_PKCS1Padding("RSA/ECB/PKCS1Padding"),
-        RSA_ECB_OAEPWithSHA1AndMGF1Padding("RSA/ECB/OAEPWithSHA-1AndMGF1Padding"),
-        RSA_ECB_OAEPWithSHA256AndMGF1Padding("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
+        RSA_ECB_PKCS1Padding("RSA", "ECB", "PKCS1Padding"),
+        RSA_ECB_OAEPWithSHA1AndMGF1Padding("RSA", "ECB", "OAEPWithSHA-1AndMGF1Padding"),
+        RSA_ECB_OAEPWithSHA256AndMGF1Padding("RSA", "ECB", "OAEPWithSHA-256AndMGF1Padding");
 
-        private String name;
+        private String name, algorithm, blockCipherMode, padding;
 
-        CipherTransformation() {
-            this.name = name();
-        }
-
-        CipherTransformation(String name) {
-            this.name = name;
+        CipherTransformation(String algorithm, String blockCipherMode, String padding) {
+            this.algorithm = algorithm;
+            this.blockCipherMode = blockCipherMode;
+            this.padding = padding;
+            this.name = algorithm + "/" + blockCipherMode + "/" + padding;
         }
 
         public String getName() {
             return this.name;
+        }
+
+        public String getAlgorithm() {
+            return algorithm;
+        }
+
+        public String getBlockCipherMode() {
+            return blockCipherMode;
+        }
+
+        public String getPadding() {
+            return padding;
         }
 
         public static CipherTransformation getCipherTransformation(EncryptionAlgorithm algorithm, BlockCipherMode blockCipherMode, Padding padding) {
@@ -337,7 +348,7 @@ public class Crypto {
 
     private static byte[] crypt(byte[] data, byte[] key, byte[] iv, CipherTransformation transformation, Mode mode) {
         try {
-            SecretKeySpec keySpec = new SecretKeySpec(key, transformation.getName());
+            SecretKeySpec keySpec = new SecretKeySpec(key, transformation.getAlgorithm());
             IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
 
             Cipher cipher = Cipher.getInstance(transformation.getName());
@@ -503,9 +514,9 @@ public class Crypto {
             md.update(text.getBytes("UTF-8"));
             return toHex(md.digest());
         } catch (NoSuchAlgorithmException e) {
-            Log.d("SHA1", e.getMessage());
+            Log.d(algorithm.getName(), e.getMessage());
         } catch (UnsupportedEncodingException e) {
-            Log.d("SHA1", e.getMessage());
+            Log.d(algorithm.getName(), e.getMessage());
         }
         return null;
     }
