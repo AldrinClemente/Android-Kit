@@ -37,34 +37,41 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SecureDataFile extends SecureData {
-    private String fileName;
-    private Context context;
+    private File file;
 
     private static Map<String, SecureDataFile> loadedDataFiles = new HashMap<>();
 
-    private SecureDataFile(Context context, byte[] data, String fileName, String password) {
+    private SecureDataFile(byte[] data, File file, String password) {
         super(data, password);
-        this.context = context;
-        this.fileName = fileName;
+        this.file = file;
+    }
+
+    public static SecureDataFile getDefault(Context context, String password) {
+        return getDataFile(context, "data", password);
     }
 
     public static SecureDataFile getDataFile(Context context, String fileName, String password) {
-        if (loadedDataFiles.containsKey(fileName)) {
+        return loadFromFile(new File(context.getFilesDir().getPath(), fileName), password);
+    }
+
+    public static SecureDataFile loadFromFile(File file, String password) {
+        String filePath = file.getAbsolutePath();
+        if (loadedDataFiles.containsKey(filePath)) {
             Log.d("SecureDataFile", "Loading cached data file");
-            return loadedDataFiles.get(fileName);
+            return loadedDataFiles.get(filePath);
         } else {
             Log.d("SecureDataFile", "Loading data file from disk");
             byte[] data = new byte[0];
             try {
-                data = FileUtils.readFileToByteArray(new File(context.getFilesDir().getPath(), fileName));
+                data = FileUtils.readFileToByteArray(file);
                 Log.d("SecureDataFile", "Successfully read data file");
             } catch (IOException e) {
                 Log.d("SecureDataFile", "Could not read data file");
             }
 
-            SecureDataFile dataFile = new SecureDataFile(context, data, fileName, password);
+            SecureDataFile dataFile = new SecureDataFile(data, file, password);
 
-            loadedDataFiles.put(fileName, dataFile);
+            loadedDataFiles.put(filePath, dataFile);
             return dataFile;
         }
     }
@@ -80,7 +87,7 @@ public class SecureDataFile extends SecureData {
 
     public synchronized void save() {
         try {
-            FileUtils.writeByteArrayToFile(new File(context.getFilesDir().getPath(), fileName), toByteArray());
+            FileUtils.writeByteArrayToFile(file, toByteArray());
             Log.d("SecureDataFile", "Successfully written data file");
         } catch (IOException e) {
             Log.d("SecureDataFile", "Could not write data file");

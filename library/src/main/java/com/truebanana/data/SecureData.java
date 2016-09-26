@@ -27,11 +27,15 @@ package com.truebanana.data;
 import com.truebanana.crypto.Crypto;
 import com.truebanana.json.JSONUtils;
 
+import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.skyscreamer.jsonassert.JSONCompare;
 import org.skyscreamer.jsonassert.JSONCompareMode;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 public class SecureData {
     protected JSONObject data;
@@ -40,6 +44,16 @@ public class SecureData {
     public SecureData(byte[] data, String password) {
         this.password = password;
         load(data);
+    }
+
+    public SecureData(InputStream inputStream, String password) {
+        this.password = password;
+        try {
+            byte[] data = IOUtils.toByteArray(inputStream);
+            load(data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 	/*
