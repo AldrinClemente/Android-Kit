@@ -32,6 +32,7 @@ import com.truebanana.http.HTTPRequest;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A simple helper class for loading and displaying {@link Bitmap}s.
@@ -138,6 +139,19 @@ public class BitmapLoader {
 
         public RequestOptions setHeaders(Map<String, String> headers) {
             this.headers = headers;
+            return this;
+        }
+
+        public RequestOptions addHeader(String key, String value) {
+            headers.put(key, value);
+            return this;
+        }
+
+        public RequestOptions addHeaders(Map<String, String> headers) {
+            Set<Map.Entry<String, String>> entries = headers.entrySet();
+            for (Map.Entry<String, String> entry : entries) {
+                addHeader(entry.getKey(), entry.getValue());
+            }
             return this;
         }
 
