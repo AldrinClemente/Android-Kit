@@ -155,12 +155,12 @@ public class BitmapLoader {
             return this;
         }
 
-        public boolean isSslVerification() {
+        public boolean isSSLVerificationEnabled() {
             return sslVerification;
         }
 
-        public RequestOptions setSslVerification(boolean sslVerification) {
-            this.sslVerification = sslVerification;
+        public RequestOptions setSSLVerificationEnabled(boolean enabled) {
+            this.sslVerification = enabled;
             return this;
         }
 
