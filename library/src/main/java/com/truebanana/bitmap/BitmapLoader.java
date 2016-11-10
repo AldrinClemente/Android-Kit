@@ -55,7 +55,7 @@ public class BitmapLoader {
     }
 
     public static void enableDiskCache(Context context) {
-        diskCache = new BitmapDiskCache(new File(context.getExternalCacheDir(), "images"));
+        diskCache = new BitmapDiskCache(new File(context.getCacheDir(), "images"));
         Log.d("BitmapLoader", "Disk cache enabled");
     }
 
