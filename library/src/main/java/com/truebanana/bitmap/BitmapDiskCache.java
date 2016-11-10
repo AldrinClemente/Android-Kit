@@ -24,27 +24,45 @@
 
 package com.truebanana.bitmap;
 
+import android.content.Context;
 import android.graphics.Bitmap;
-import android.util.LruCache;
+import android.graphics.BitmapFactory;
+
+import com.truebanana.cache.AbstractDiskLruCache;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 
 /**
- * An {@link LruCache} for {@link Bitmap}s with a default max size of 10MB if not specified.
+ * A {@link AbstractDiskLruCache} for {@link Bitmap}s with a default max size of 10MB if not specified.
  */
-public class BitmapMemCache extends LruCache<String, Bitmap> {
-    public BitmapMemCache() {
-        this(10 * 1024 * 1024); // 10MB
+public class BitmapDiskCache extends AbstractDiskLruCache<Bitmap> {
+    public BitmapDiskCache(Context context) {
+        super(context);
     }
 
-    public BitmapMemCache(int maxSize) {
-        super(maxSize);
+    public BitmapDiskCache(Context context, long maxSize) {
+        super(context, maxSize);
     }
 
-    public boolean contains(String key) {
-        return get(key) != null;
+    public BitmapDiskCache(File directory) {
+        super(directory);
+    }
+
+    public BitmapDiskCache(File directory, long maxSize) {
+        super(directory, maxSize);
     }
 
     @Override
-    protected int sizeOf(String key, Bitmap value) {
-        return value.getRowBytes() * value.getHeight();
+    public Bitmap get(String key) {
+        byte[] data = getData(key);
+        return BitmapFactory.decodeByteArray(data, 0, data.length);
+    }
+
+    @Override
+    public void put(String key, Bitmap item) {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        item.compress(Bitmap.CompressFormat.PNG, 100, os);
+        putData(key, os.toByteArray());
     }
 }

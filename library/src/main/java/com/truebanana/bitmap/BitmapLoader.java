@@ -24,12 +24,17 @@
 
 package com.truebanana.bitmap;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.widget.ImageView;
 
+import com.truebanana.async.Async;
+import com.truebanana.async.BackgroundTask;
 import com.truebanana.http.BitmapResponseListener;
 import com.truebanana.http.HTTPRequest;
+import com.truebanana.log.Log;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -39,13 +44,19 @@ import java.util.Set;
  * This class also uses {@link BitmapMemCache} to cache previously loaded {@link Bitmap}s in memory.
  */
 public class BitmapLoader {
-    private static BitmapMemCache cache;
+    private static BitmapMemCache memCache;
+    private static BitmapDiskCache diskCache;
     private static RequestOptions defaultRequestOptions = new RequestOptions();
 
     private static void initializeCacheAsNeeded() {
-        if (cache == null) {
-            cache = new BitmapMemCache();
+        if (memCache == null) {
+            memCache = new BitmapMemCache();
         }
+    }
+
+    public static void enableDiskCache(Context context) {
+        diskCache = new BitmapDiskCache(new File(context.getExternalCacheDir(), "images"));
+        Log.d("BitmapLoader", "Disk cache enabled");
     }
 
     /**
@@ -103,20 +114,39 @@ public class BitmapLoader {
      */
     public static void displayBitmap(final String url, int width, int height, final ImageView imageView, RequestOptions options) {
         initializeCacheAsNeeded();
-        Bitmap bitmap = cache.get(url);
-        if (bitmap != null) {
-            imageView.setImageBitmap(bitmap);
+        if (memCache.contains(url)) {
+            Log.d("BitmapLoader", "Image in mem cache, loading from memory...");
+            imageView.setImageBitmap(memCache.get(url));
+        } else if (diskCache != null && diskCache.contains(url)) {
+            Log.d("BitmapLoader", "Image in disk cache, loading from disk...");
+            Async.executeAsync(new BackgroundTask<Bitmap>() {
+                @Override
+                public Bitmap doInBackground() {
+                    return diskCache.get(url);
+                }
+
+                @Override
+                public void onPostExecute(Bitmap result) {
+                    imageView.setImageBitmap(result);
+                    memCache.put(url, result);
+                }
+            }, true);
         } else {
+            Log.d("BitmapLoader", "Image not cached, retrieving...");
             HTTPRequest.create(url)
                     .addHeaders(options.headers)
                     .setConnectTimeout(options.connectTimeout)
                     .setReadTimeout(options.readTimeout)
                     .setSSLVerificationEnabled(options.sslVerification)
+                    .setLogTag("BitmapLoader")
                     .setHTTPResponseListener(new BitmapResponseListener(width, height) {
                         @Override
                         public void onDecodingSuccessful(Bitmap bitmap) {
                             imageView.setImageBitmap(bitmap);
-                            cache.put(url, bitmap);
+                            memCache.put(url, bitmap);
+                            if (diskCache != null) {
+                                diskCache.put(url, bitmap);
+                            }
                         }
 
                         @Override
