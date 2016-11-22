@@ -22,31 +22,38 @@
  * SOFTWARE.
  */
 
-package com.truebanana.data;
+package com.truebanana.gamesec;
 
-public class SecureInteger {
-    private int[] holder;
-    private int index;
+import java.util.Random;
 
-    public SecureInteger() {
+public class MaskedFloat {
+    private Random random;
+    private int maskedValue;
+    private int mask;
+
+    public MaskedFloat() {
         this(0);
     }
 
-    public SecureInteger(int value) {
-        this(value, 128);
-    }
-
-    public SecureInteger(int value, int size) {
-        holder = new int[size];
+    public MaskedFloat(float value) {
+        this.random = new Random();
         setValue(value);
     }
 
-    public int getValue() {
-        return holder[index];
+    public float getValue() {
+        return Float.intBitsToFloat(maskedValue ^ mask);
     }
 
-    public void setValue(int value) {
-        index = ++index % holder.length;
-        holder[index] = value;
+    public void setValue(float value) {
+        mask = random.nextInt();
+        maskedValue = Float.floatToIntBits(value) ^ mask;
+    }
+
+    public void increment() {
+        setValue(getValue() + 1);
+    }
+
+    public void decrement() {
+        setValue(getValue() + 1);
     }
 }

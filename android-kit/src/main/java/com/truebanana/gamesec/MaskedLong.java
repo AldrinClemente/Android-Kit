@@ -22,31 +22,38 @@
  * SOFTWARE.
  */
 
-package com.truebanana.data;
+package com.truebanana.gamesec;
 
-public class SecureDouble {
-    private double[] holder;
-    private int index;
+import java.util.Random;
 
-    public SecureDouble() {
+public class MaskedLong {
+    private Random random;
+    private long maskedValue;
+    private long mask;
+
+    public MaskedLong() {
         this(0);
     }
 
-    public SecureDouble(double value) {
-        this(value, 128);
-    }
-
-    public SecureDouble(double value, int size) {
-        holder = new double[size];
+    public MaskedLong(long value) {
+        this.random = new Random();
         setValue(value);
     }
 
-    public double getValue() {
-        return holder[index];
+    public long getValue() {
+        return maskedValue ^ mask;
     }
 
-    public void setValue(double value) {
-        index = ++index % holder.length;
-        holder[index] = value;
+    public void setValue(long value) {
+        mask = random.nextLong();
+        maskedValue = value ^ mask;
+    }
+
+    public void increment() {
+        setValue(getValue() + 1);
+    }
+
+    public void decrement() {
+        setValue(getValue() + 1);
     }
 }

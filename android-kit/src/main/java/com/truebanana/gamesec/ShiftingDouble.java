@@ -22,39 +22,39 @@
  * SOFTWARE.
  */
 
-package com.truebanana.random;
+package com.truebanana.gamesec;
 
-import java.util.Random;
+public class ShiftingDouble {
+    private double[] holder;
+    private int index;
 
-/**
- * Includes utility methods for generating random values.
- */
-public class RandomUtils {
-	private static Random random = new Random();
-	
-	public static boolean randomBoolean() {
-		return random.nextBoolean();
-	}
-	
-	public static int randomInt(int min, int max) {
-		return random.nextInt((max - min) + 1) + min;
-	}
-	
-	public static long randomLong(long min, long max) {
-		return (long) ((random.nextDouble() * (max - min) + 1) + min);
-	}
-	
-	public static float randomFloat(float min, float max) {
-		return random.nextFloat() * (max - min) + min;
-	}
-	
-	public static double randomDouble(float min, float max) {
-		return random.nextDouble() * (max - min) + min;
-	}
-	
-	public static byte[] randomDoubleBytes(int length) {
-		byte[] bytes = new byte[length];
-		random.nextBytes(bytes);
-		return bytes;
-	}
+    public ShiftingDouble() {
+        this(0);
+    }
+
+    public ShiftingDouble(double value) {
+        this(value, 128);
+    }
+
+    public ShiftingDouble(double value, int size) {
+        holder = new double[size];
+        setValue(value);
+    }
+
+    public double getValue() {
+        return holder[index];
+    }
+
+    public void setValue(double value) {
+        index = ++index % holder.length;
+        holder[index] = value;
+    }
+
+    public void increment() {
+        setValue(getValue() + 1);
+    }
+
+    public void decrement() {
+        setValue(getValue() + 1);
+    }
 }

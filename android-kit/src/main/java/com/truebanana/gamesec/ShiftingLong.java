@@ -22,21 +22,21 @@
  * SOFTWARE.
  */
 
-package com.truebanana.data;
+package com.truebanana.gamesec;
 
-public class SecureLong {
+public class ShiftingLong {
     private long[] holder;
     private int index;
 
-    public SecureLong() {
+    public ShiftingLong() {
         this(0);
     }
 
-    public SecureLong(long value) {
+    public ShiftingLong(long value) {
         this(value, 128);
     }
 
-    public SecureLong(long value, int size) {
+    public ShiftingLong(long value, int size) {
         holder = new long[size];
         setValue(value);
     }
@@ -48,5 +48,13 @@ public class SecureLong {
     public void setValue(long value) {
         index = ++index % holder.length;
         holder[index] = value;
+    }
+
+    public void increment() {
+        setValue(getValue() + 1);
+    }
+
+    public void decrement() {
+        setValue(getValue() + 1);
     }
 }

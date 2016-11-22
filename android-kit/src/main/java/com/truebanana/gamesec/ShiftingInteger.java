@@ -22,31 +22,39 @@
  * SOFTWARE.
  */
 
-package com.truebanana.data;
+package com.truebanana.gamesec;
 
-public class SecureFloat {
-    private float[] holder;
+public class ShiftingInteger {
+    private int[] holder;
     private int index;
 
-    public SecureFloat() {
+    public ShiftingInteger() {
         this(0);
     }
 
-    public SecureFloat(float value) {
+    public ShiftingInteger(int value) {
         this(value, 128);
     }
 
-    public SecureFloat(float value, int size) {
-        holder = new float[size];
+    public ShiftingInteger(int value, int size) {
+        holder = new int[size];
         setValue(value);
     }
 
-    public float getValue() {
+    public int getValue() {
         return holder[index];
     }
 
-    public void setValue(float value) {
+    public void setValue(int value) {
         index = ++index % holder.length;
         holder[index] = value;
+    }
+
+    public void increment() {
+        setValue(getValue() + 1);
+    }
+
+    public void decrement() {
+        setValue(getValue() + 1);
     }
 }
