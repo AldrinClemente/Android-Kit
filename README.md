@@ -65,6 +65,11 @@ A collection of utility methods related to `View`s, such as getting values from 
 
 ## How to Use
 
+### Gradle
+```
+compile 'com.truebanana.androidkit:android-kit:0.6.1'
+```
+
 ### Manual Import
 
 #### 1. Clone **Android Kit**
@@ -84,10 +89,6 @@ git clone https://github.com/AldrinClemente/Android-Kit.git
 > 4. Select `:library` and click **OK** to add the dependency then **OK** again to close the **Project Structure** window
 
 #### 4. **Done**!
-
-### Gradle
-
-*Coming soon!*
 
 ----------
 
