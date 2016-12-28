@@ -182,8 +182,8 @@ public class SMSUtils {
         if (message.length() > 160) {
             ArrayList<String> messageParts = smsManager.divideMessage(message);
 
-            ArrayList<PendingIntent> sentIntents = new ArrayList<PendingIntent>();
-            ArrayList<PendingIntent> deliveryIntents = new ArrayList<PendingIntent>();
+            ArrayList<PendingIntent> sentIntents = new ArrayList<>();
+            ArrayList<PendingIntent> deliveryIntents = new ArrayList<>();
 
             sentIntents.add(sentIntent);
             deliveryIntents.add(deliveryIntent);
@@ -205,17 +205,19 @@ public class SMSUtils {
         Bundle bundle = intent.getExtras();
         if (bundle != null) {
             Object[] pdus = (Object[]) bundle.get("pdus");
-            final SmsMessage[] messages = new SmsMessage[pdus.length];
-            for (int i = 0; i < pdus.length; i++) {
-                messages[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
-            }
-            StringBuffer content = new StringBuffer();
-            if (messages.length > 0) {
-                for (int i = 0; i < messages.length; i++) {
-                    content.append(messages[i].getMessageBody());
+            if (pdus != null) {
+                final SmsMessage[] messages = new SmsMessage[pdus.length];
+                for (int i = 0; i < pdus.length; i++) {
+                    messages[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
                 }
+                StringBuilder content = new StringBuilder();
+                if (messages.length > 0) {
+                    for (SmsMessage message : messages) {
+                        content.append(message.getMessageBody());
+                    }
+                }
+                return content.toString();
             }
-            return content.toString();
         }
         return null;
     }

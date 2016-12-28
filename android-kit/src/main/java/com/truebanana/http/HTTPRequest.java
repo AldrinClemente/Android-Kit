@@ -157,9 +157,6 @@ public class HTTPRequest {
         } catch (MalformedURLException e) {
             e.printStackTrace();
             throw new IllegalArgumentException("Invalid URL.");
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException("Invalid URL.");
         }
 
         return request;
