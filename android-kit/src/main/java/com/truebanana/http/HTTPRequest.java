@@ -533,9 +533,7 @@ public class HTTPRequest {
     }
 
     private void onRequestError(final HTTPRequestError error) {
-        if (logTag != null) {
-            Log.d(logTag + " Request Error", error.name());
-        }
+        log("Request Error", error.name());
         handler.post(new Runnable() {
             @Override
             public void run() {
@@ -592,36 +590,31 @@ public class HTTPRequest {
 
                     if (!verifySSL) {
                         httpsURLConnection.setHostnameVerifier(new NoVerifyHostnameVerifier());
-                        if (logTag != null) {
-                            Log.d(logTag + " SSL Verification Disabled", "**********");
-                        }
+                        log("SSL Verification Disabled", "**********");
                     }
                 }
 
-                // Log important info as needed
-                if (logTag != null) {
-                    Log.d(logTag + " Endpoint", urlConnection.getURL().toString());
-                    Iterator<Map.Entry<String, String>> iterator = headers.entrySet().iterator();
-                    while (iterator.hasNext()) {
-                        Map.Entry<String, String> pair = (Map.Entry) iterator.next();
-                        urlConnection.addRequestProperty(pair.getKey(), pair.getValue());
-                        Log.d(logTag + " Request Header", pair.getKey() + ": " + pair.getValue());
-                    }
-                    if (multiPartContent != null) {
-                        Log.d(logTag + " Multipart Request Boundary", multiPartContent.getBoundary());
-                        int counter = 1;
-                        for (MultiPartContent.Part part : multiPartContent.getParts()) {
-                            Log.d(logTag + " Request Body Part " + counter, "Name: " + part.getName() + "; File Name: " + part.getFileName());
+                log("Endpoint", urlConnection.getURL().toString());
+                Iterator<Map.Entry<String, String>> iterator = headers.entrySet().iterator();
+                while (iterator.hasNext()) {
+                    Map.Entry<String, String> pair = (Map.Entry) iterator.next();
+                    urlConnection.addRequestProperty(pair.getKey(), pair.getValue());
+                    log("Request Header", pair.getKey() + ": " + pair.getValue());
+                }
+                if (multiPartContent != null) {
+                    log("Multipart Request Boundary", multiPartContent.getBoundary());
+                    int counter = 1;
+                    for (MultiPartContent.Part part : multiPartContent.getParts()) {
+                        log("Request Body Part " + counter, "Name: " + part.getName() + "; File Name: " + part.getFileName());
 
-                            Iterator<Map.Entry<String, String>> it = part.getHeaders().entrySet().iterator();
-                            while (it.hasNext()) {
-                                Map.Entry<String, String> pair = (Map.Entry) it.next();
-                                Log.d(logTag + " Request Body Part " + counter + " Header", pair.getKey() + ": " + pair.getValue());
-                            }
+                        Iterator<Map.Entry<String, String>> it = part.getHeaders().entrySet().iterator();
+                        while (it.hasNext()) {
+                            Map.Entry<String, String> pair = (Map.Entry) it.next();
+                            log("Request Body Part " + counter + " Header", pair.getKey() + ": " + pair.getValue());
                         }
-                    } else {
-                        Log.d(logTag + " Request Body", body);
                     }
+                } else {
+                    log("Request Body", body);
                 }
 
                 if (mockResponse == null) {
@@ -674,10 +667,8 @@ public class HTTPRequest {
                     }
 
                     // Log response
-                    if (logTag != null) {
-                        Log.d(logTag + " Response Message", response.getResponseMessage());
-                        Log.d(logTag + " Response Content", response.getStringContent());
-                    }
+                    log("Response Message", response.getResponseMessage());
+                    log("Response Content", response.getStringContent());
 
                     // Trigger request completed and return the response
                     onRequestCompleted(response);
@@ -694,10 +685,8 @@ public class HTTPRequest {
                         e.printStackTrace();
                     }
                     onPostExecute();
-                    if (logTag != null) {
-                        Log.d(logTag + " Response Message", mockResponse.getResponseMessage());
-                        Log.d(logTag + " Response Content", mockResponse.getStringContent());
-                    }
+                    log("Response Message", mockResponse.getResponseMessage());
+                    log("Response Content", mockResponse.getStringContent());
                     onRequestCompleted(mockResponse);
                     urlConnection.disconnect();
                     onRequestTerminated();
@@ -764,6 +753,12 @@ public class HTTPRequest {
      */
     public static void clearRequestQueue() {
         requestQueue.clear();
+    }
+
+    private void log(String baseTag, String message) {
+        if (logTag != null) {
+            Log.d(logTag + " " + baseTag, message);
+        }
     }
 
     private static class NoVerifyTrustManager implements X509TrustManager {
